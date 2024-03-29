@@ -1,9 +1,6 @@
 package ca.ulaval.glo2003.customer.api;
 
-import ca.ulaval.glo2003.customer.logic.CustomerFactory;
-import ca.ulaval.glo2003.customer.logic.CustomerPersistence;
-import ca.ulaval.glo2003.customer.logic.Email;
-import ca.ulaval.glo2003.customer.logic.EmailType;
+import ca.ulaval.glo2003.customer.logic.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -11,6 +8,7 @@ import jakarta.ws.rs.core.Response;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Path("/customers")
@@ -37,7 +35,13 @@ public class CustomerApi {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createCustomer(CustomerRequest request) {
         // Défi : pouvez-vous nettoyer ça?
-        var emails = request.emails.stream().collect(Collectors.toMap(dto -> EmailType.parse(dto.type()), dto -> new Email(dto.value()), (existing, replacement) -> existing));
+        //Convertir la liste d'emails en une carte d'emails
+        Map<EmailType, Email> emails =
+                request.emails.stream()
+                        .collect(Collectors.toMap(
+                                dto -> EmailType.parse(dto.type()),//Cle: Type d'email
+                                dto -> new Email(dto.value()),//Valeur:objet email
+                                (existing, replacement) -> existing));// Fonction de fusion en cas de conflit
         var customer = customerFactory.create(
                 request.name,
                 LocalDate.parse(request.birthDate, DateTimeFormatter.ISO_LOCAL_DATE),
